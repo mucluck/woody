@@ -1,0 +1,11 @@
+.sign-in {
+	&-wrapper {
+		transition: opacity .3s ease, visibility .3s ease;
+		overflow: hidden;
+
+		&.is-hidden {
+			opacity: 0;
+			visibility: hidden;
+		}
+	}
+}

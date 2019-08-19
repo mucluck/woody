@@ -1,26 +1,23 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import { Provider } from "react-redux";
+import { Layout } from "antd";
+import { BrowserRouter as Router, Route } from "react-router-dom";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+import { store } from "./store/";
+import { TaskList } from "./components/Pages/TaskList";
+import { CreateTask } from "./components/Pages/CreateTask";
+import { SignIn } from "./components/Pages/SignIn";
+
+export default function App() {
+	return (
+		<Provider store={ store }>
+			<Router>
+				<Layout>
+					<Route path="/" exact component={ TaskList } />
+					<Route path="/create/" component={ CreateTask } />
+					<Route path="/signin/" component={ SignIn } />
+				</Layout>
+			</Router>
+		</Provider>
+	);
 }
-
-export default App;
