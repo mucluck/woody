@@ -12,5 +12,8 @@ export function Container(props) {
 }
 
 Container.propTypes = {
-	children: PropTypes.object,
+	children: PropTypes.oneOfType([
+		PropTypes.object,
+		PropTypes.array,
+	]),
 };

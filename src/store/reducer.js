@@ -9,16 +9,18 @@ const initialState = {
 	userName: "Name",
 	loadingTaskSaving: false,
 	error: "",
+	taskCreation: false,
 };
 
 export default (state = initialState, action) => {
-	const { type, tasks, totalTaskCount, token, loadingTaskSaving, updatedTask } = action;
+	const { type, tasks, totalTaskCount, token, loadingTaskSaving, updatedTask, taskCreation, error } = action;
 
 	switch (type) {
 		case constants.FETCH_TASKS_DATA:
 			return {
 				...state,
 				loadingTasks: true,
+				error,
 			};
 		case constants.SET_TASKS_DATA:
 			return {
@@ -26,6 +28,7 @@ export default (state = initialState, action) => {
 				tasks,
 				totalTaskCount,
 				loadingTasks: false,
+				error,
 			};
 		case constants.SIGNING_IN:
 			return {
@@ -37,6 +40,7 @@ export default (state = initialState, action) => {
 				...state,
 				token,
 				loadingSignIn: false,
+				error,
 			};
 		case constants.TASK_SAVING:
 			if (updatedTask) {
@@ -56,6 +60,18 @@ export default (state = initialState, action) => {
 				...state,
 				tasks: state.tasks,
 				loadingTaskSaving,
+				error,
+			};
+		case constants.TASK_CREATION:
+			return {
+				...state,
+				taskCreation,
+				error,
+			};
+		case constants.CLEAR_ERROR:
+			return {
+				...state,
+				error,
 			};
 		default:
 			return state;

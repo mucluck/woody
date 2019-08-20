@@ -6,7 +6,7 @@ import constants from "../store/constants";
 const API = new DataService("https://uxcandy.com/~shapoval/test-task-backend/v2");
 
 function* fetchTasksData(reduxData) {
-	const { page } = reduxData;
+	const { page, sort } = reduxData;
 
 	yield put({
 		type: constants.FETCH_TASKS_DATA,
@@ -14,7 +14,10 @@ function* fetchTasksData(reduxData) {
 
 	try {
 		const response = yield call(async () => {
-			const data = await API.handleTaskList({ page });
+			const data = await API.handleTaskList({
+				page,
+				sort,
+			});
 
 			return data;
 		});
@@ -26,17 +29,11 @@ function* fetchTasksData(reduxData) {
 			tasks,
 			totalTaskCount,
 			loadingTasks: false,
+			error: response.status === "ok" ? "" : JSON.stringify(response.message),
 		});
 	} catch (event) {
 		console.error("Error: ", new Error(event));
 	}
-}
-
-function* watchfetchTasksData() {
-	yield takeEvery(
-		"GET_TASKS",
-		fetchTasksData
-	);
 }
 
 function* signIn(reduxData) {
@@ -61,17 +58,11 @@ function* signIn(reduxData) {
 		yield put({
 			type: constants.LOG_IN,
 			token,
+			error: response.status === "ok" ? "" : JSON.stringify(response.message),
 		});
 	} catch (event) {
 		console.error("Error: ", new Error(event));
 	}
-}
-
-function* watchSignIn() {
-	yield takeEvery(
-		"SIGN_IN",
-		signIn,
-	);
 }
 
 function* saveTask(reduxData) {
@@ -93,14 +84,11 @@ function* saveTask(reduxData) {
 			return data;
 		});
 
-		yield put(response.status === "ok" ? {
+		yield put({
 			type: constants.TASK_SAVING,
 			loadingTaskSaving: false,
 			updatedTask: task,
-		} : {
-			type: constants.TASK_SAVING, // TODO: task update
-			loadingTaskSaving: false,
-			error: response.message.token,
+			error: response.status === "ok" ? "" : JSON.stringify(response.message),
 		});
 
 		callback();
@@ -109,11 +97,53 @@ function* saveTask(reduxData) {
 	}
 }
 
-function* watchsaveTask() {
+function* createTask(reduxData) {
+	const { task } = reduxData;
+
+	yield put({
+		type: constants.TASK_CREATION,
+		taskCreation: true,
+	});
+
+	try {
+		const response = yield call(async () => {
+			const data = await API.handleTaskCreate({
+				task,
+			});
+
+			return data;
+		});
+
+		yield put({
+			type: constants.TASK_CREATION,
+			taskCreation: false,
+			error: response.status === "ok" ? "" : JSON.stringify(response.message),
+		});
+	} catch (event) {
+		console.error("Error: ", new Error(event));
+	}
+}
+
+function* watcher() {
 	yield takeEvery(
-		"SAVE_TASK",
+		constants.GET_TASKS,
+		fetchTasksData
+	);
+
+	yield takeEvery(
+		constants.SIGN_IN,
+		signIn,
+	);
+
+	yield takeEvery(
+		constants.SAVE_TASK,
 		saveTask,
+	);
+
+	yield takeEvery(
+		constants.CREATE_TASK,
+		createTask,
 	);
 }
 
-export { watchfetchTasksData, watchSignIn, watchsaveTask };
+export { watcher };

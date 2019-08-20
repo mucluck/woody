@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Icon, Avatar, Table, Button, Checkbox, Input, message } from "antd";
+import { Icon, Avatar, Table, Button, Checkbox, Input, message, Pagination } from "antd";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
 
@@ -14,12 +14,83 @@ const listStyle = {
 	flexDirection: "column",
 	padding: "1rem 0",
 };
+const filtersStylse = {
+	display: "flex",
+	paddingTop: "1rem",
+	justifyContent: "space-around",
+};
 
 class UnmappedTaskList extends Component {
 	constructor(props) {
 		super(props);
 
-		this.columns = [
+		this.state = {
+			tasks: [],
+			totalTaskCount: 0,
+			loading: true,
+			editableRow: null,
+			sortDirection: "asc",
+			sortField: "id",
+		};
+
+		this.sort = null;
+
+		this.sortTaskData = this.sortTaskData.bind(this);
+		this.handleEdit = this.handleEdit.bind(this);
+		this.getTasksData = this.getTasksData.bind(this);
+	}
+
+	componentDidMount() {
+		this.getTasksData();
+	}
+
+	getTasksData(page = this.state.page) {
+		const { dispatch } = this.props;
+
+		dispatch(actions.getTasks({
+			page,
+			sort: {
+				direction: this.state.sortDirection,
+				field: this.state.sortField,
+			},
+		}));
+	}
+
+	handleEdit(row) {
+		this.setState({ editableRow: row.id });
+	}
+
+	handleSave() {
+		const { dispatch, state: { token } } = this.props;
+		const { editableRow: id } = this.state;
+
+		dispatch(actions.saveTask(
+			{
+				task: {
+					id,
+					text: this.text.state.value,
+					status: this.status.rcCheckbox.state.checked ? "10" : "0",
+					token,
+				},
+				callback: () => this.setState({
+					editableRow: null,
+				}),
+			},
+		));
+	}
+
+	sortTaskData(sortField) {
+		const { sortDirection } = this.state;
+
+		this.setState({
+			sortDirection: !sortDirection || sortDirection === "desc" ? "asc" : "desc",
+			sortField,
+		}, this.getTasksData);
+	}
+
+	render() {
+		const { state: { loadingTasks, tasks, totalTaskCount, error }, dispatch } = this.props;
+		const columns = [
 			{
 				title: "ID",
 				dataIndex: "id",
@@ -35,7 +106,6 @@ class UnmappedTaskList extends Component {
 				title: "User Name",
 				dataIndex: "username",
 				width: "15%",
-				sorter: (a, b, direction) => this.sortTaskData(direction, "username"),
 			},
 			{
 				title: "Email",
@@ -55,7 +125,7 @@ class UnmappedTaskList extends Component {
 				},
 			},
 			{
-				title: "",
+				title: "Status",
 				dataIndex: "",
 				render: row => {
 					return +this.state.editableRow !== +row.id ?
@@ -86,77 +156,55 @@ class UnmappedTaskList extends Component {
 				},
 			},
 		];
-
-		this.state = {
-			tasks: [],
-			totalTaskCount: 0,
-			loading: true,
-			editableRow: null,
-		};
-
-		this.sortTaskData = this.sortTaskData.bind(this);
-		this.handleEdit = this.handleEdit.bind(this);
-	}
-
-	componentDidMount() {
-		this.getTasksData();
-	}
-
-	getTasksData(page = 0) {
-		const { dispatch } = this.props;
-
-		dispatch(actions.getTasks({ page }));
-	}
-
-	handleEdit(row) {
-		this.setState({ editableRow: row.id });
-	}
-
-	handleSave() {
-		const { dispatch, state: { token } } = this.props;
-		const { editableRow: id } = this.state;
-
-		dispatch(actions.saveTask(
+		const sort = [
 			{
-				task: {
-					id,
-					text: this.text.state.value,
-					status: this.status.rcCheckbox.state.checked ? "10" : "0",
-					token,
-					username: "Name",
-				},
-				callback: () => this.setState({
-					editableRow: null,
-				}),
+				field: "id",
+				title: "Sort by ID",
 			},
-		));
-	}
-
-	sortTaskData(direction, field) {
-		console.log(field, direction);
-	}
-
-	render() {
-		const { state: { loadingTasks, tasks, totalTaskCount, error } } = this.props;
+			{
+				field: "username",
+				title: "Sort by Name",
+			},
+			{
+				field: "email",
+				title: "Sort by E-mail",
+			},
+			{
+				field: "status",
+				title: "Sort by Status",
+			},
+		];
 
 		return (
 			<>
-				{ error && message.error(error) }
+				{ error && message.error(error, 3, () => dispatch(actions.clearError())) }
 				<Header />
 				<Container >
+					<div style={ filtersStylse }>
+						{sort.map(sorter => {
+							return <Button key={sorter.field} onClick={() => this.sortTaskData(sorter.field)}>
+								{sorter.title}
+								{
+									this.state.sortField === sorter.field && <Icon type={ this.state.sortDirection === "asc" ? "caret-up" : "caret-down" } />
+								}
+							</Button>;
+						})}
+					</div>
 					<Table
 						style={ listStyle }
-						columns={ this.columns }
+						columns={ columns }
 						rowKey={task => task.id}
 						dataSource={ tasks }
-						pagination={{
-							onChange: page => this.getTasksData(page),
-							pageSize: 3,
-							size: "small",
-							total: +totalTaskCount,
-						}}
 						loading={ loadingTasks }
-						onChange={ this.handleTableChange }
+						pagination={ false }
+					/>
+				</Container>
+				<Container>
+					<Pagination
+						onChange={ page => this.setState({ page }, () => this.getTasksData(this.state.page)) }
+						total={ +totalTaskCount }
+						pageSize={ 3 }
+						size={ "small" }
 					/>
 				</Container>
 			</>

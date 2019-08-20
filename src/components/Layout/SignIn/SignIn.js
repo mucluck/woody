@@ -42,16 +42,12 @@ export class UnmappedSignIn extends Component {
 
 		const { dispatch, form: { validateFields } } = this.props;
 
-		validateFields((err, values) => {
-			if (!err) {
-				dispatch(actions.signIn(values));
-			}
-		});
+		validateFields((err, values) => !err && dispatch(actions.signIn(values)));
 	}
 
 	render() {
 		const { getFieldDecorator } = this.props.form;
-		const { state: { loadingSignIn, token } } = this.props;
+		const { state: { loadingSignIn, token }, extra } = this.props;
 
 		return (
 			<div style={ signInStyle }>
@@ -101,16 +97,17 @@ export class UnmappedSignIn extends Component {
 					</Form>
 				</div>}
 				{!token ? <Button
-					type="primary"
-					shape="circle"
+					type={ "primary" }
+					shape={ "circle" }
 					icon={ !this.state.isOpened ? "login" : "close-circle" }
 					onClick={ this.handleShow }
 				/> : <Button
-					type="primary"
-					shape="circle"
+					type={ "primary" }
+					shape={ "circle" }
 					icon={ "logout" }
 					onClick={ this.handleSignOut }
 				/>}
+				{extra}
 			</div>
 		);
 	}
@@ -129,5 +126,6 @@ UnmappedSignIn.propTypes = {
 	form: PropTypes.object,
 	state: PropTypes.object,
 	dispatch: PropTypes.func,
+	extra: PropTypes.object,
 };
 
